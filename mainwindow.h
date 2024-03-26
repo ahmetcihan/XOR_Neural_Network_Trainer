@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QDebug>
+#include <QDir>
+#include <QFileInfo>
 #include <math.h>
 
 namespace Ui {

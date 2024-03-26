@@ -6,14 +6,19 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
     connect(ui->pushButton_train,SIGNAL(clicked(bool)),this,SLOT(_2_2_1_ann_train()));
 
+    QString imagePath = QFileInfo(__FILE__).absolutePath() + "/net.png";
+    QPixmap my_pixmap;
+    my_pixmap.load(imagePath);
+    ui->label_net->setPixmap(my_pixmap);
 }
 double MainWindow::activation_func(double val){
     return (1 / (1 + exp(-val)));     //sigmoid   - good
     //return tanh(val);                 //tanh      - works but slow and uses small learning rate
     //return val;                       //identity  - not properly worked
-    //return atan(val);                   //atan      - not bad but slower
+    //return atan(val);                 //atan      - not bad but slower
     //return (log(1+exp(val)));         //softplus  - good but slower
     /*********Leaky RELU**********/     //ReLU      -
     //if(val <= 0) return (0.01*val);
@@ -40,36 +45,35 @@ void MainWindow::_2_2_1_ann_train(void){
     double input2[4] = {1,0,1,0};
     double desired_output[4] = {0,1,1,0};
     double calculated_output[4] = {0,0,0,0};
-    double Y_in,Y_out;
+    double Y_in = 0,Y_out = 0;
     double w_input_to_hidden[2][2];
     double w_hidden_to_output[2];
 
-    double A_in,B_in;
-    double A_out,B_out;
-    double output_error;
+    double A_in = 0,B_in = 0;
+    double A_out = 0,B_out = 0;
+    double output_error = 0;
+    double global_error = 0;
+    double err_sum = 0;
+    double errorA = 0,errorB = 0;
 
-    double biasA = 0.17;
-    double biasB = 0.18;
-    double bias_output = 0.19;
-
-    double errorA,errorB;
-
-    u32 epoch = ui->spinBox->value();
+    u32 total_epochs = ui->spinBox->value();
     double learning_rate = ui->doubleSpinBox->value();
 
-    double global_error;
-    double err_sum;
+    double biasA = ui->doubleSpinBox_biasA->value();
+    double biasB = ui->doubleSpinBox_biasB->value();
+    double bias_output = ui->doubleSpinBox_biasO->value();
 
-    w_input_to_hidden[0][0] = 0.11;
-    w_input_to_hidden[0][1] = 0.12;
+    w_input_to_hidden[0][0] = ui->doubleSpinBox_w1->value();
+    w_input_to_hidden[0][1] = ui->doubleSpinBox_w2->value();
 
-    w_input_to_hidden[1][0] = 0.13;
-    w_input_to_hidden[1][1] = 0.14;
+    w_input_to_hidden[1][0] = ui->doubleSpinBox_w3->value();
+    w_input_to_hidden[1][1] = ui->doubleSpinBox_w4->value();
 
-    w_hidden_to_output[0] = 0.15;
-    w_hidden_to_output[1] = 0.16;
+    w_hidden_to_output[0] = ui->doubleSpinBox_w5->value();
+    w_hidden_to_output[1] = ui->doubleSpinBox_w6->value();
 
-    for(u32 era = 0; era < epoch; era++){
+    for(u32 epoch = 0; epoch < total_epochs; epoch++){
+        err_sum = 0;
         for(u8 k = 0; k < 4; k++){
             A_in = input1[k]*w_input_to_hidden[0][0] + input2[k]*w_input_to_hidden[1][0] + biasA;
             B_in = input1[k]*w_input_to_hidden[0][1] + input2[k]*w_input_to_hidden[1][1] + biasB;
@@ -82,7 +86,7 @@ void MainWindow::_2_2_1_ann_train(void){
             output_error = desired_output[k] - Y_out;
             calculated_output[k] = Y_out;
 
-            err_sum = output_error;
+            err_sum += output_error;
 
             global_error = derivative_of_activation_func(Y_in) * output_error;
 
@@ -103,8 +107,7 @@ void MainWindow::_2_2_1_ann_train(void){
             biasA += errorA * learning_rate;
             biasB += errorB * learning_rate;
         }
-        ui->label_status->setText(QString("Era-%1 , Total error: %2").arg(era).arg(err_sum));
-        //qDebug() << QString("era : %1").arg(era) << "error :" << err_sum;
+        ui->label_status->setText(QString("Epoch : %1 , Total error: %2").arg(epoch).arg(err_sum));
         QApplication::processEvents();
     }
 
@@ -116,15 +119,28 @@ void MainWindow::_2_2_1_ann_train(void){
     for(u8 j = 0; j < 2; j++){
         qDebug() << QString("h_to_o_w[%1] :").arg(j) << w_hidden_to_output[j];
     }
-    qDebug() << "biasA" << biasA;
-    qDebug() << "biasB" << biasB;
-    qDebug() << "bias_output" << bias_output;
-    qDebug() << "desired 0 : " << desired_output[0] << "calculated 0 : " << calculated_output[0];
-    qDebug() << "desired 1 : " << desired_output[1] << "calculated 1 : " << calculated_output[1];
-    qDebug() << "desired 2 : " << desired_output[2] << "calculated 2 : " << calculated_output[2];
-    qDebug() << "desired 3 : " << desired_output[3] << "calculated 3 : " << calculated_output[3];
-}
 
+    QString debugText = ""; // Initialize an empty string to build the output
+    debugText += "w1: " + QString::number(w_input_to_hidden[0][0]) + "\n";
+    debugText += "w2: " + QString::number(w_input_to_hidden[0][1]) + "\n";
+    debugText += "w3: " + QString::number(w_input_to_hidden[1][0]) + "\n";
+    debugText += "w4: " + QString::number(w_input_to_hidden[1][1]) + "\n";
+    debugText += "w5: " + QString::number(w_hidden_to_output[0]) + "\n";
+    debugText += "w6: " + QString::number(w_hidden_to_output[1]) + "\n";
+    debugText += "biasA: " + QString::number(biasA) + "\n";
+    debugText += "biasB: " + QString::number(biasB) + "\n";
+    debugText += "bias_output: " + QString::number(bias_output) + "\n";
+
+    // Loop through input/desired/calculated values and append to the string
+    for (int i = 0; i < 4; ++i) {
+        debugText += QString("input1: %1, input2: %2, output: %3, calculated output: %4\n")
+                   .arg(input1[i])
+                   .arg(input2[i])
+                   .arg(desired_output[i])
+                   .arg(calculated_output[i]);
+    }
+    ui->label_calculated->setText(debugText); // Set the label text with the accumulated string
+}
 MainWindow::~MainWindow()
 {
     delete ui;
