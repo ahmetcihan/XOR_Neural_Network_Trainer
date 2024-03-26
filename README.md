@@ -4,7 +4,7 @@ Author: Ahmet Cihan AKINCA (acihana@gmail.com)
 
 For a more detailed explanation of the implemented algorithms and the XOR problem, refer to the following blog post:
       
-      http://acihana.blogspot.com/2024/03/understanding-artificial-neural-networks.html 
+http://acihana.blogspot.com/2024/03/understanding-artificial-neural-networks.html 
 
 ##Requirements:
 
